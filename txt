@@ -1,0 +1,9 @@
+const fs = require('fs');
+
+// Read the file into a buffer
+const buffer = fs.readFileSync('/path/to/file.pdf');
+
+// Convert the buffer to a base64 encoded string
+const base64 = buffer.toString('base64');
+
+console.log(base64);
