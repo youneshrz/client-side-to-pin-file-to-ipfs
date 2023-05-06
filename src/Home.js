@@ -34,42 +34,66 @@ const changeHandler = (event) => {
 const changeName=(e)=>{
   setFileName(e.target.value)
 }
+const check_Name_Exist= async (names)=>{
+  let test
+  names.forEach(el => {
+    if(el.metadata.name === fileName) {
+       test=false;
+    }else{
+      test=true
+    }   
+  })
+  return test
+}
 
 const handleSubmission = async() => {
 
-    if (isWeb3Enabled) {
+  if (isWeb3Enabled) {
       
-  const formData = new FormData();
-  
-  formData.append('file', selectedFile)
+    const formData = new FormData();
+    
+    formData.append('file', selectedFile)
 
-  const metadata = JSON.stringify({
-    name: fileName,
-  });
-  formData.append('pinataMetadata', metadata);
-  
-  const options = JSON.stringify({
-    cidVersion: 0,
-  })
-  formData.append('pinataOptions', options);
+    const metadata = JSON.stringify({
+      name: fileName,
+    });
+    formData.append('pinataMetadata', metadata);
+    
+    const options = JSON.stringify({
+      cidVersion: 0,
+    })
+    formData.append('pinataOptions', options);
 
-  try{
-     await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
-      maxBodyLength: "Infinity",
-      headers: {
-        'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
-        Authorization: JWT
+    try{
+      const check_valid_Name = {'name':fileName};
+      const res = await axios.post("http://localhost:4000/recharch", check_valid_Name, {
+        maxBodyLength: "Infinity",
+      });
+      let check
+      if((res.data).length > 0){
+        check = await check_Name_Exist(res.data)
+        {!check && alert('This name is declared, Plz provide other name')}
+      }else if((res.data).length === 0){
+         check=true
       }
-    }).then(async function (response) {
-     
-      setHash(prev =>response.data.IpfsHash);     
-         
-  });
-   
-  } catch (error) {
-    console.log(error);
-  }
 
+      if(check){
+      await axios.post("https://api.pinata.cloud/pinning/pinFileToIPFS", formData, {
+        maxBodyLength: "Infinity",
+        headers: {
+          'Content-Type': `multipart/form-data; boundary=${formData._boundary}`,
+          Authorization: JWT
+        }
+      }).then(async function (response) {
+        
+        setHash(prev =>response.data.IpfsHash);     
+          
+      });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  
 }else{
   alert('Plz connect to your wallet')
 }
